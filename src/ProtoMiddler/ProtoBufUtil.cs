@@ -12,7 +12,6 @@ Email: jboyd[at]securityinnovation[dot]com
  * */
 
 using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 
@@ -22,13 +21,8 @@ namespace ProtoMiddler
     {
         static ProtoBufUtil()
         {
-            var currenDir = Path.GetDirectoryName(typeof (ProtoBufUtil).Assembly.Location);
+            var currenDir = Path.GetDirectoryName(typeof (ProtoBufUtil).Assembly.Location) ?? @".\";
             var protocPath = Path.Combine(currenDir, @"protoc.exe");
-
-            if (!File.Exists(protocPath))
-            {
-                protocPath = @"D:\Projects\ProtoMiddler\src\ProtoMiddler\.protoc\protoc.exe";
-            }
 
             ProtoCPath = protocPath;
         }
@@ -37,34 +31,23 @@ namespace ProtoMiddler
 
         public static string DecodeRaw(byte[] protobuf)
         {
-            string retval = string.Empty;
+            var args = @"--decode_raw";
 
-            ProcessStartInfo procStartInfo = new ProcessStartInfo();
-            procStartInfo.FileName = ProtoCPath;
-            procStartInfo.Arguments = @"--decode_raw";
-            procStartInfo.RedirectStandardInput = true;
-            procStartInfo.RedirectStandardError = true;
-            procStartInfo.RedirectStandardOutput = true;
-            procStartInfo.UseShellExecute = false;
-            procStartInfo.CreateNoWindow = true;
-
-            Process proc = Process.Start(procStartInfo);
-
-            // proc.StandardInput.BaseStream.Write(protobufBytes, 0, protobufBytes.Length);
-            BinaryWriter binaryWriter = new BinaryWriter(proc.StandardInput.BaseStream);
-            binaryWriter.Write(protobuf);
-            binaryWriter.Flush();
-            binaryWriter.Close();
-            retval = proc.StandardOutput.ReadToEnd();
-
-            return retval;
+            return RunProtoc(args, protobuf);
         }
 
         public static string DecodeWithProto(byte[] protobuf, string messageType, string protoFile, string protoPath)
         {
+            var args = String.Format(@"--decode={0} --proto_path=""{1}"" ""{2}""", messageType, protoPath.Trim('\\'), protoFile.Trim('\\'));
+
+            return RunProtoc(args, protobuf);
+        }
+
+        private static string RunProtoc(string args, byte[] input)
+        {
             ProcessStartInfo procStartInfo = new ProcessStartInfo();
             procStartInfo.FileName = ProtoCPath;
-            procStartInfo.Arguments = string.Format(@"--decode={0} --proto_path=""{1}"" ""{2}""", messageType, protoPath.Trim('\\'), protoFile.Trim('\\'));
+            procStartInfo.Arguments = args;
             procStartInfo.RedirectStandardInput = true;
             procStartInfo.RedirectStandardError = true;
             procStartInfo.RedirectStandardOutput = true;
@@ -72,13 +55,18 @@ namespace ProtoMiddler
             procStartInfo.CreateNoWindow = true;
 
             Process proc = Process.Start(procStartInfo);
+
+            if (proc == null)
+            {
+                return "Problems with run protoc.exe";
+            }
 
             string result;
 
             try
             {
                 BinaryWriter binaryWriter = new BinaryWriter(proc.StandardInput.BaseStream);
-                binaryWriter.Write(protobuf);
+                binaryWriter.Write(input);
                 binaryWriter.Flush();
                 binaryWriter.Close();
 
@@ -98,7 +86,7 @@ namespace ProtoMiddler
                     result = e.Message;
                 }
             }
-           
+
             return result;
         }
     }
