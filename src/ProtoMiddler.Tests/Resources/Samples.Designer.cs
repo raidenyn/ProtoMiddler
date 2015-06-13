@@ -69,5 +69,20 @@ namespace ProtoMiddler.Tests.Resources {
                 return ((byte[])(obj));
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 1: &quot;6016714f-a8a7-43cb-8d1f-761f088e18a7&quot;
+        ///2: 0x08d271a2c7ae8777
+        ///3: 0x08d271a2c7ae8777
+        ///4: &quot;642c63d088a64d9b80c789d3b9ac89ef@diadoc.ru&quot;
+        ///5: &quot;\320\242\320\265\321\201\321\202\320\276\320\262\320\260\321\217 \320\276\321\200\320\263\320\260\320\275\320\270\320\267\320\260\321\206\320\270\321\217 \342\204\2269962578&quot;
+        ///6: &quot;e05395bc9f0c4883b127385e359a1ea3@diadoc.ru&quot;
+        ///7: &quot;\320\242\320\265\321\201\321\202\320\276\320\262\320\260\321\217 \320\276\321\200\320\263\320\260\320\275\320\270\320\267\320\260\321\206\320 [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string raw_schema {
+            get {
+                return ResourceManager.GetString("raw_schema", resourceCulture);
+            }
+        }
     }
 }

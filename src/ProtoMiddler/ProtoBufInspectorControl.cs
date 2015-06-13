@@ -103,6 +103,27 @@ namespace ProtoMiddler
             {
                 ParsedText = ProtoBufUtil.DecodeRaw(ProtobufBytes);
             }
+
+            SetTree(SchemaParser.ReadAsTree(ParsedText));
+        }
+
+        private void SetTree(TreeNode<ProtoItem> tree)
+        {
+            treeView.Nodes.Clear();
+
+            var rootView = treeView.Nodes.Add(tree.Value.ToString());
+
+            AddTree(tree, rootView);
+        }
+
+        private void AddTree(TreeNode<ProtoItem> nodeData, TreeNode nodeView)
+        {
+            foreach (var child in nodeData.Children)
+            {
+                var newVewNode = nodeView.Nodes.Add(child.Value.ToString());
+
+                AddTree(child, newVewNode);
+            }
         }
 
         public void Clear()

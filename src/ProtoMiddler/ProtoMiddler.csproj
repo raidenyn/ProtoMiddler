@@ -50,7 +50,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ProtoBufParser.cs" />
+    <Compile Include="SchemaParser.cs" />
+    <Compile Include="TreeNode.cs" />
     <Compile Include="ProtoBufInspector.cs" />
     <Compile Include="ProtoBufUtil.cs" />
     <Compile Include="ProtoBufInspectorControl.cs">
