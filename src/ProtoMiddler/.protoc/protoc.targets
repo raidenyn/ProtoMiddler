@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">$(MSBuildProjectDirectory)\..\</SolutionDir>
+
+    
+
+    <!-- Download ProtoC.exe if it does not already exist -->
+    <DownloadProtoCExe Condition=" '$(DownloadProtoCExe)' == '' ">true</DownloadProtoCExe>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProtoCPath Include="$(ProjectDir)\.protoc\protoc.exe"/>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <BuildDependsOn>
+      _DownloadProtoC;
+      $(BuildDependsOn);
+    </BuildDependsOn>
+  </PropertyGroup>
+
+  <Target Name="_DownloadProtoC">
+    <DownloadProtoC OutputFilename="%(ProtoCPath.FullPath)" Condition=" '$(DownloadProtoCExe)' == 'true' AND !Exists('%(ProtoCPath.FullPath)')" />
+
+    <Copy SourceFiles="%(ProtoCPath.FullPath)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true"/>
+  </Target>
+
+  <UsingTask TaskName="DownloadProtoC" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <OutputFilename ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Reference Include="System.Core" />
+      <Reference Include="System.IO.Compression.FileSystem" />
+      <Using Namespace="System" />
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Net" />
+      <Using Namespace="Microsoft.Build.Framework" />
+      <Using Namespace="Microsoft.Build.Utilities" />
+      <Using Namespace="System.IO.Compression" />
+
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+                try {
+                    var directory = Path.GetDirectoryName(Path.GetFullPath(OutputFilename));
+                    var downloadingArchive = Path.Combine(directory, "protoc.zip");
+
+                    Log.LogMessage("Downloading latest version of ProtoC.exe...");
+                    WebClient webClient = new WebClient();
+                    webClient.DownloadFile("https://github.com/google/protobuf/releases/download/v2.6.1/protoc-2.6.1-win32.zip", downloadingArchive);
+                    
+                    ZipFile.ExtractToDirectory(downloadingArchive, directory);
+                    
+                    File.Delete(downloadingArchive);
+                    
+                    return true;
+                }
+                catch (Exception ex) {
+                    Log.LogErrorFromException(ex);
+                    return false;
+                }
+            ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+</Project>
