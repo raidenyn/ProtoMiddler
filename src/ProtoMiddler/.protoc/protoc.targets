@@ -3,27 +3,31 @@
   <PropertyGroup>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">$(MSBuildProjectDirectory)\..\</SolutionDir>
 
-    
+    <ProtoCPath>$(ProjectDir)\.protoc\protoc.exe</ProtoCPath>
 
     <!-- Download ProtoC.exe if it does not already exist -->
     <DownloadProtoCExe Condition=" '$(DownloadProtoCExe)' == '' ">true</DownloadProtoCExe>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProtoCPath Include="$(ProjectDir)\.protoc\protoc.exe"/>
+    
   </ItemGroup>
 
   <PropertyGroup>
     <BuildDependsOn>
-      _DownloadProtoC;
+      _CopyProtoC;
       $(BuildDependsOn);
     </BuildDependsOn>
   </PropertyGroup>
 
-  <Target Name="_DownloadProtoC">
-    <DownloadProtoC OutputFilename="%(ProtoCPath.FullPath)" Condition=" '$(DownloadProtoCExe)' == 'true' AND !Exists('%(ProtoCPath.FullPath)')" />
+  <Target Name="_CopyProtoC" DependsOnTargets="_DownloadProtoC">
+    <Message Text="Coping protoc.exe to the output dir." Importance="normal"/>
+    <Copy SourceFiles="$(ProtoCPath)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true"/>
+  </Target>
 
-    <Copy SourceFiles="%(ProtoCPath.FullPath)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true"/>
+  <Target Name="_DownloadProtoC" Condition=" '$(DownloadProtoCExe)' == 'true' AND !Exists('$(ProtoCPath)')">
+    <Message Text="Downloading protoc.exe from github..." Importance="high"/>
+    <DownloadProtoC OutputFilename="$(ProtoCPath)" />
   </Target>
 
   <UsingTask TaskName="DownloadProtoC" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
@@ -32,6 +36,7 @@
     </ParameterGroup>
     <Task>
       <Reference Include="System.Core" />
+      <Reference Include="System.IO.Compression" />
       <Reference Include="System.IO.Compression.FileSystem" />
       <Using Namespace="System" />
       <Using Namespace="System.IO" />
@@ -50,7 +55,15 @@
                     WebClient webClient = new WebClient();
                     webClient.DownloadFile("https://github.com/google/protobuf/releases/download/v2.6.1/protoc-2.6.1-win32.zip", downloadingArchive);
                     
-                    ZipFile.ExtractToDirectory(downloadingArchive, directory);
+                    //Unzip all files with overwriting exists
+                    using (ZipArchive archive = ZipFile.Open(downloadingArchive, ZipArchiveMode.Read))
+                    {
+                        foreach (var zipArchiveEntry in archive.Entries)
+                        {
+                            var filePath = Path.Combine(directory, zipArchiveEntry.FullName);
+                            zipArchiveEntry.ExtractToFile(filePath, overwrite: true);
+                        }
+                    }
                     
                     File.Delete(downloadingArchive);
                     
