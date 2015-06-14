@@ -9,6 +9,8 @@ REM is not supported. Also handle x86 operating systems, where %ProgramFiles(x86
 REM %MSBuild% value when setting the variable and never quote %MSBuild% references.
 set MSBuild="%ProgramFiles(x86)%\MSBuild\12.0\Bin\MSBuild.exe"
 if not exist %MSBuild% @set MSBuild="%ProgramFiles%\MSBuild\12.0\Bin\MSBuild.exe"
+if not exist %MSBuild% @set MSBuild="%ProgramFiles(x86)%\MSBuild\14.0\Bin\MSBuild.exe"
+if not exist %MSBuild% @set MSBuild="%ProgramFiles%\MSBuild\14.0\Bin\MSBuild.exe"
 
 if "%1" == "" goto BuildDefaults
 
