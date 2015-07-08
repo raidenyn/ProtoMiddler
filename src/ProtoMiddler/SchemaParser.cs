@@ -98,6 +98,11 @@ namespace ProtoMiddler
                 return Name;
             }
 
+            if (Value.Length > 100)
+            {
+                Value = Value.Substring(0, 100) + "...";
+            }
+
             return Name + ": " + Value;
         }
     }
